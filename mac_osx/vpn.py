@@ -80,9 +80,11 @@ def get_services_list():
 
 def print_usage(cmd):
     print ('Usage:\n' +
-           '  {0} vpn_name url\n' +
            '  {0} vpn_name\n' +
-           '  {0} stop vpn_name').format(cmd)
+           '  {0} url\n' +
+           '  {0} vpn_name url\n' +
+           '  {0} s | stop\n' +
+           '  {0} s | stop vpn_name').format(cmd)
 
 
 def is_stop_action(action):
@@ -90,7 +92,11 @@ def is_stop_action(action):
 
 
 def is_help_action(action):
-    return action == '-h' or action == '--help' or action == '-?'
+    return action == 'h' or action == '-h' or action == '--help' or action == '-?'
+
+
+def is_url(param):
+    return str.startswith(param, 'http')
 
 
 argv = sys.argv
@@ -98,9 +104,12 @@ argv = sys.argv
 if len(argv) == 2:
     if is_help_action(argv[1]):
         print_usage(argv[0])
+    elif is_url(argv[1]):
+        vpn_name = choose_from_available_network_interfaces()
+        connect_to_vpn_and_open_url(vpn_name, argv[1])
     elif is_stop_action(argv[1]):
-        network = choose_from_available_network_interfaces()
-        stop_vpn(network)
+        vpn_name = choose_from_available_network_interfaces()
+        stop_vpn(vpn_name)
     else:
         start_vpn(argv[1])
 elif len(argv) == 3:
@@ -109,5 +118,5 @@ elif len(argv) == 3:
     else:
         connect_to_vpn_and_open_url(argv[1], argv[2])
 else:
-    network = choose_from_available_network_interfaces()
-    start_vpn(network)
+    vpn_name = choose_from_available_network_interfaces()
+    start_vpn(vpn_name)
