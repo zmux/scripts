@@ -51,14 +51,19 @@ def open_url(url):
         call(['open', url])
 
 
-def choose_from_available_network_interfaces():
-    answer = get_services_list()
-    if len(answer) > 0:
-        for number in range(1, len(answer) - 1):
+def choose_from_available_network_interfaces(status):
+    answer = get_services_list(status)
+    answer_len = len(answer)
+    if answer_len == 1:
+        return answer[0]
+    elif answer_len > 0:
+        for number in range(0, answer_len):
             print "{0} - {1}".format(number, answer[number])
         print 'Choose network number: ',
         chosen_number = sys.stdin.readline().strip('\n')
         return answer[int(chosen_number)]
+    else:
+        sys.exit()
 
 
 def connect_service(vpn_name):
@@ -73,10 +78,16 @@ def get_service_status(vpn_name):
     return check_output([NETWORKSETUP, '-showpppoestatus', vpn_name]).strip('\n')
 
 
-def get_services_list():
+def get_services_list(status):
     answer = check_output([NETWORKSETUP, '-listallnetworkservices']).split("\n")
-    return answer
-
+    result = []
+    answer_len = len(answer)
+    if answer_len > 0:
+        for number in range(1, answer_len):
+            vpn_name = answer[number]
+            if vpn_name != '' and get_service_status(vpn_name) == status:
+                result.append(vpn_name)
+    return result
 
 def print_usage(cmd):
     print ('Usage:\n' +
@@ -105,10 +116,10 @@ if len(argv) == 2:
     if is_help_action(argv[1]):
         print_usage(argv[0])
     elif is_url(argv[1]):
-        vpn_name = choose_from_available_network_interfaces()
+        vpn_name = choose_from_available_network_interfaces(DISCONNECTED)
         connect_to_vpn_and_open_url(vpn_name, argv[1])
     elif is_stop_action(argv[1]):
-        vpn_name = choose_from_available_network_interfaces()
+        vpn_name = choose_from_available_network_interfaces(CONNECTED)
         stop_vpn(vpn_name)
     else:
         start_vpn(argv[1])
@@ -118,5 +129,5 @@ elif len(argv) == 3:
     else:
         connect_to_vpn_and_open_url(argv[1], argv[2])
 else:
-    vpn_name = choose_from_available_network_interfaces()
+    vpn_name = choose_from_available_network_interfaces(DISCONNECTED)
     start_vpn(vpn_name)
